@@ -1,7 +1,8 @@
 const axios = require("axios");
 const moment = require("moment");
 const NewsAPI = require("newsapi");
-const { newsApi } = require("../config");
+const { newsApi } =
+  process.env.NODE_ENV === "production" ? process.env : require("../config");
 const newsapi = new NewsAPI(newsApi);
 
 function fetchNewsArticle(search) {
@@ -17,17 +18,21 @@ function fetchNewsArticle(search) {
       page: 1
     })
     .then(response => {
-      const topFive = response.articles.splice(0, 5);
-      topFive.forEach(article => {
-        console.log({
+      if (!response.articles.length) return;
+      else return response.articles.splice(0, 5);
+    })
+    .then(topFive => {
+      const articles = topFive.map(article => {
+        return {
           Source: article.source.name,
           Title: article.title,
           Description: article.description,
-          Link: article.url,
-          Content: article.content
-        });
+          Link: article.url
+        };
       });
-    });
+      return articles;
+    })
+    .then(result => result);
 }
 
 module.exports = { fetchNewsArticle };
